@@ -1,3 +1,5 @@
+# Copyright (c) 2012, Jeremy (Hashmal) Pinat.
+
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
 VALID_RESPONSE_BODY = "<GetSessionTokenResponse " +

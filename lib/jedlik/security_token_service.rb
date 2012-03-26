@@ -1,3 +1,5 @@
+# Copyright (c) 2012, Jeremy (Hashmal) Pinat.
+
 module Jedlik
 
   # SecurityTokenService automatically manages the creation and renewal of

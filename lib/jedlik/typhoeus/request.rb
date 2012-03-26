@@ -1,3 +1,5 @@
+# Copyright (c) 2012, Jeremy (Hashmal) Pinat.
+
 module Typhoeus
   class Request
     def sign sts

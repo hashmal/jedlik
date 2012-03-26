@@ -1,3 +1,5 @@
+# Copyright (c) 2012, Jeremy (Hashmal) Pinat.
+
 require 'rake'
 
 Gem::Specification.new do |s|

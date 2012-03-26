@@ -1,3 +1,5 @@
+# Copyright (c) 2012, Jeremy (Hashmal) Pinat.
+
 module Jedlik
 
   # Establishes a connection to Amazon DynamoDB using credentials.

@@ -1,3 +1,5 @@
+# Copyright (c) 2012, Jeremy (Hashmal) Pinat.
+
 require 'typhoeus'
 require 'time'
 require 'base64'
