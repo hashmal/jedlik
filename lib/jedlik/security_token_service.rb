@@ -45,7 +45,7 @@ module Jedlik
 
     def string_to_sign
       [
-        "POST",
+        "GET",
         "sts.amazonaws.com",
         "/",
         "AWSAccessKeyId=#{@_access_key_id}&Action=GetSessionToken&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=#{CGI.escape authorization_params[:Timestamp]}&Version=2011-06-15"
@@ -76,7 +76,7 @@ module Jedlik
           :Signature        => signature,
         }.merge authorization_params
 
-        response = Typhoeus::Request.post "https://sts.amazonaws.com", :params => params
+        response = (Typhoeus::Request.get "https://sts.amazonaws.com/", :params => params)
         if response.success?
           body = response.body
           @session_token     = get_tag :SessionToken, body
@@ -91,9 +91,9 @@ module Jedlik
 
     def authorization_params
       {
-        :Action    => 'GetSessionToken',
-        :Timestamp => Time.now.utc.iso8601,
-        :Version   => '2011-06-15',
+        :Action           => 'GetSessionToken',
+        :Timestamp        => Time.now.utc.iso8601,
+        :Version          => '2011-06-15',
       }
     end
 

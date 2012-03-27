@@ -8,7 +8,7 @@ VALID_RESPONSE_BODY = "<GetSessionTokenResponse " +
 <Credentials>
 <SessionToken>SESSION_TOKEN</SessionToken>
 <SecretAccessKey>secret_access_key</SecretAccessKey>
-<Expiration>2036-03-19T01:03:22.276Z</Expiration>
+<Expiration>2012-03-24T23:10:38Z</Expiration>
 <AccessKeyId>access_key_id</AccessKeyId>
 </Credentials>
 </GetSessionTokenResult>
@@ -24,20 +24,27 @@ module Jedlik
 
     before do
       Time.stub(:now).and_return(Time.parse("2012-03-24T22:10:38Z"))
-      stub_request(:post, "https://sts.amazonaws.com/").
-        with(:body => "AWSAccessKeyId=access_key_id&Action=GetSessionToken&Signature=ybtIr0mrJ28uJFYMMNi+bLANvIDD7tAh6F97JGgtvDw=&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2012-03-24T22:10:38Z&Version=2011-06-15").
-        to_return(:status => 200, :body => VALID_RESPONSE_BODY)
+      stub_request(:get, "https://sts.amazonaws.com/").
+        with(:query => {
+          "AWSAccessKeyId"   => "access_key_id",
+          "Action"           => "GetSessionToken",
+          "Signature"        => "8h1VJkZsuVP3y+BkqwABrFBgTuTCUNHcHPZPARfQHJw=",
+          "SignatureMethod"  => "HmacSHA256",
+          "SignatureVersion" => "2",
+          "Timestamp"        => "2012-03-24T22:10:38Z",
+          "Version"          => "2011-06-15"
+        }).to_return(:status => 200, :body => VALID_RESPONSE_BODY)
     end
 
     it "computes proper signature" do
       s = SecurityTokenService.new("access_key_id", "secret_access_key")
       s.string_to_sign.should == [
-        "POST",
+        "GET",
         "sts.amazonaws.com",
         "/",
         "AWSAccessKeyId=access_key_id&Action=GetSessionToken&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2012-03-24T22%3A10%3A38Z&Version=2011-06-15"
       ].join("\n")
-      s.signature.should == "ybtIr0mrJ28uJFYMMNi+bLANvIDD7tAh6F97JGgtvDw="
+      s.signature.should == "8h1VJkZsuVP3y+BkqwABrFBgTuTCUNHcHPZPARfQHJw="
     end
 
     it "returns session_token" do
@@ -54,10 +61,10 @@ module Jedlik
 
     # a memoized timestamp would cause a bug when temporary credentials
     # expire and new ones are requested.
-    it "updates the timestamp" do
+    it "updates the timestamp for different requests" do
       s = SecurityTokenService.new("access_key_id", "secret_access_key")
       s.string_to_sign.should == [
-        "POST",
+        "GET",
         "sts.amazonaws.com",
         "/",
         "AWSAccessKeyId=access_key_id&Action=GetSessionToken&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2012-03-24T22%3A10%3A38Z&Version=2011-06-15"
@@ -65,7 +72,7 @@ module Jedlik
 
       Time.stub(:now).and_return(Time.parse("2012-03-24T23:11:38Z"))
       s.string_to_sign.should == [
-        "POST",
+        "GET",
         "sts.amazonaws.com",
         "/",
         "AWSAccessKeyId=access_key_id&Action=GetSessionToken&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2012-03-24T23%3A11%3A38Z&Version=2011-06-15"
