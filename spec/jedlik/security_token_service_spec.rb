@@ -44,6 +44,14 @@ module Jedlik
       sts.session_token.should == "SESSION_TOKEN"
     end
 
+    it "returns access_key_id" do
+      sts.access_key_id.should == "access_key_id"
+    end
+
+    it "returns secret_access_key" do
+      sts.secret_access_key.should == "secret_access_key"
+    end
+
     # a memoized timestamp would cause a bug when temporary credentials
     # expire and new ones are requested.
     it "updates the timestamp" do
