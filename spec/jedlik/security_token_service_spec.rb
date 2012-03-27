@@ -43,5 +43,25 @@ module Jedlik
     it "returns session_token" do
       sts.session_token.should == "SESSION_TOKEN"
     end
+
+    # a memoized timestamp would cause a bug when temporary credentials
+    # expire and new ones are requested.
+    it "updates the timestamp" do
+      s = SecurityTokenService.new("access_key_id", "secret_access_key")
+      s.string_to_sign.should == [
+        "POST",
+        "sts.amazonaws.com",
+        "/",
+        "AWSAccessKeyId=access_key_id&Action=GetSessionToken&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2012-03-24T22%3A10%3A38Z&Version=2011-06-15"
+      ].join("\n")
+
+      Time.stub(:now).and_return(Time.parse("2012-03-24T23:11:38Z"))
+      s.string_to_sign.should == [
+        "POST",
+        "sts.amazonaws.com",
+        "/",
+        "AWSAccessKeyId=access_key_id&Action=GetSessionToken&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2012-03-24T23%3A11%3A38Z&Version=2011-06-15"
+      ].join("\n")
+    end
   end
 end

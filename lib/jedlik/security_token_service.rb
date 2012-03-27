@@ -90,7 +90,7 @@ module Jedlik
     end
 
     def authorization_params
-      @authorization_params ||= {
+      {
         :Action    => 'GetSessionToken',
         :Timestamp => Time.now.utc.iso8601,
         :Version   => '2011-06-15',
