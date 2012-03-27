@@ -39,6 +39,19 @@ module Jedlik
       @session_token
     end
 
+    def signature
+      sign string_to_sign
+    end
+
+    def string_to_sign
+      [
+        "POST",
+        "sts.amazonaws.com",
+        "/",
+        "AWSAccessKeyId=#{@_access_key_id}&Action=GetSessionToken&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=#{CGI.escape authorization_params[:Timestamp]}&Version=2011-06-15"
+      ].join("\n")
+    end
+
     private
 
     # Extract the contents of a given tag.
@@ -55,44 +68,41 @@ module Jedlik
     # credentials were previously obtained, no request is made until they
     # expire.
     def obtain_credentials
-      if (not @expiration) or (@expiration <= Time.now.utc)
-        body = (Typhoeus::Request.get request_uri).body
+      if not @expiration or @expiration <= Time.now.utc
+        params = {
+          :AWSAccessKeyId   => @_access_key_id,
+          :SignatureMethod  => 'HmacSHA256',
+          :SignatureVersion => '2',
+          :Signature        => signature,
+        }.merge authorization_params
 
-        @session_token = (get_tag :SessionToken, body)
-        @secret_access_key = (get_tag :SecretAccessKey, body)
-        @expiration = (Time.parse (get_tag :Expiration, body))
-        @access_key_id = (get_tag :AccessKeyId, body)
+        response = Typhoeus::Request.post "https://sts.amazonaws.com", :params => params
+        if response.success?
+          body = response.body
+          @session_token     = get_tag :SessionToken, body
+          @secret_access_key = get_tag :SecretAccessKey, body
+          @expiration        = Time.parse get_tag(:Expiration, body)
+          @access_key_id     = get_tag :AccessKeyId, body
+        else
+          raise "credential errors: #{response.inspect}"
+        end
       end
     end
 
-    # Generate the params to be sent to STS.
-    def request_params
-      {
-        :AWSAccessKeyId   => @_access_key_id,
-        :Action           => 'GetSessionToken',
-        :DurationSeconds  => '3600',
-        :SignatureMethod  => 'HmacSHA256',
-        :SignatureVersion => '2',
-        :Timestamp        => Time.now.utc.iso8601,
-        :Version          => '2011-06-15',
+    def authorization_params
+      @authorization_params ||= {
+        :Action    => 'GetSessionToken',
+        :Timestamp => Time.now.utc.iso8601,
+        :Version   => '2011-06-15',
       }
-    end
-
-    # Generate the URI that should be requested.
-    def request_uri
-      qs = (request_params).map do |key, val|
-        [(CGI.escape key.to_s), (CGI.escape val)].join '='
-      end.join '&'
-
-      "https://sts.amazonaws.com/?#{qs}&Signature=" +
-      (CGI.escape (sign "GET\nsts.amazonaws.com\n/\n#{qs}"))
     end
 
     # Sign (HMAC-SHA256) a string using the secret key given at
     # initialization.
     def sign string
-      (Base64.encode64 (OpenSSL::HMAC.digest 'sha256',
-      @_secret_access_key, string)).chomp
+      Base64.encode64(
+        OpenSSL::HMAC.digest('sha256', @_secret_access_key, string)
+      ).strip
     end
   end
 end

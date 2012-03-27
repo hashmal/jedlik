@@ -19,6 +19,7 @@ module Jedlik
       opts = DEFAULTS.merge opts
       @sts = SecurityTokenService.new access_key_id, secret_access_key
       @endpoint = opts[:endpoint]
+      @debug = opts[:debug]
     end
 
     # Create and send a request to DynamoDB.
@@ -30,47 +31,47 @@ module Jedlik
     # http://docs.amazonwebservices.com/amazondynamodb/latest/developerguide
     #
     def post operation, data={}
-      request = new_request operation, data.to_json
+      request = new_request operation, Yajl::Encoder.encode(data)
       request.sign sts
-      hydra.queue request; hydra.run
+      hydra.queue request
+      hydra.run
       response = request.response
+      puts response.inspect if @debug
 
-      if status_ok? response
-        JSON.parse response.body
+      if response.code == 200
+        Yajl::Parser.parse response.body
+      else
+        raise_error response
       end
     end
 
-  private
+    private
 
     def hydra
       Typhoeus::Hydra.hydra
     end
 
     def new_request operation, body
-      (Typhoeus::Request.new "https://#{@endpoint}/",
-      :method => :post,
-      :headers => {
-        'host' => @endpoint,
-        'content-type' => "application/x-amz-json-1.0",
-        'x-amz-date' => (Time.now.utc.strftime "%a, %d %b %Y %H:%M:%S GMT"),
-        'x-amz-security-token' => sts.session_token,
-        'x-amz-target' => "DynamoDB_20111205.#{operation}",
-        },
-      :body => body)
+      Typhoeus::Request.new "https://#{@endpoint}/",
+        :method   => :post,
+        :body     => body,
+        :headers  => {
+          'host'                  => @endpoint,
+          'content-type'          => "application/x-amz-json-1.0",
+          'x-amz-date'            => (Time.now.utc.strftime "%a, %d %b %Y %H:%M:%S GMT"),
+          'x-amz-security-token'  => sts.session_token,
+          'x-amz-target'          => "DynamoDB_20111205.#{operation}",
+        }
     end
 
-    def status_ok? response
+    def raise_error response
       case response.code
-      when 200
-        true
       when 400..499
-        js = JSON.parse response.body
-        (raise ClientError,
-        "#{js['__type'].match(/#(.+)\Z/)[1]}: #{js["message"]}")
+        raise ClientError, response.body
       when 500..599
-        raise ServerError
+        raise ServerError, response.code
       else
-        false
+        raise Exception, response.body
       end
     end
   end
