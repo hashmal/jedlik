@@ -63,20 +63,28 @@ module Jedlik
     # expire and new ones are requested.
     it "updates the timestamp for different requests" do
       s = SecurityTokenService.new("access_key_id", "secret_access_key")
-      s.string_to_sign.should == [
-        "GET",
-        "sts.amazonaws.com",
-        "/",
-        "AWSAccessKeyId=access_key_id&Action=GetSessionToken&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2012-03-24T22%3A10%3A38Z&Version=2011-06-15"
-      ].join("\n")
+      s.session_token
 
       Time.stub(:now).and_return(Time.parse("2012-03-24T23:11:38Z"))
-      s.string_to_sign.should == [
-        "GET",
-        "sts.amazonaws.com",
-        "/",
-        "AWSAccessKeyId=access_key_id&Action=GetSessionToken&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2012-03-24T23%3A11%3A38Z&Version=2011-06-15"
-      ].join("\n")
+      stub_request(:get, "https://sts.amazonaws.com/").
+        with(:query => {
+          "AWSAccessKeyId"   => "access_key_id",
+          "Action"           => "GetSessionToken",
+          "Signature"        => "TRVf5kuncW+c7y3amXH1WWR+Mf9Y+KzVNmUQ9vDRgNQ=",
+          "SignatureMethod"  => "HmacSHA256",
+          "SignatureVersion" => "2",
+          "Timestamp"        => "2012-03-24T23:11:38Z",
+          "Version"          => "2011-06-15"
+        }).to_return(:status => 200, :body => VALID_RESPONSE_BODY)
+      s.session_token
+    end
+
+    it "does not update the timestamp for the same request" do
+      t1 = Time.parse("2012-03-24T22:10:38Z")
+      t2 = Time.parse("2012-03-24T22:10:39Z")
+      Time.stub(:now).and_return(t1, t2)
+
+      sts.session_token
     end
   end
 end

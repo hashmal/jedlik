@@ -68,7 +68,8 @@ module Jedlik
     # credentials were previously obtained, no request is made until they
     # expire.
     def obtain_credentials
-      if not @expiration or @expiration <= Time.now.utc
+      @time = Time.now.utc
+      if not @expiration or @expiration <= @time
         params = {
           :AWSAccessKeyId   => @_access_key_id,
           :SignatureMethod  => 'HmacSHA256',
@@ -87,13 +88,14 @@ module Jedlik
           raise "credential errors: #{response.inspect}"
         end
       end
+      @time = nil
     end
 
     def authorization_params
       {
-        :Action           => 'GetSessionToken',
-        :Timestamp        => Time.now.utc.iso8601,
-        :Version          => '2011-06-15',
+        :Action    => 'GetSessionToken',
+        :Timestamp => (@time || Time.now.utc).iso8601,
+        :Version   => '2011-06-15',
       }
     end
 
