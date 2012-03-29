@@ -24,6 +24,12 @@ request body.
     conn.post :GetItem, {:TableName => "table1", :Key => {:S => "foo"}}
     # => Hash
 
+It is also possible to pass a string that will be used directly for the
+request body:
+
+    conn.post :GetItem, '{"TableName": "table1", "Key": {"S": "foo"}}'
+    # => Hash
+
 License
 -------
 

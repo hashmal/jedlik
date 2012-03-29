@@ -3,17 +3,25 @@ require 'benchmark'
 
 describe Jedlik::Connection do
   describe "#post" do
-    before do
-      Time.stub!(:now).and_return(Time.at(1332635893)) # Sat Mar 24 20:38:13 -0400 2012
-    end
-
-    it "signs and posts a request" do
-      mock_service = mock(Jedlik::SecurityTokenService,
+    let(:mock_service) {
+      mock(Jedlik::SecurityTokenService,
         :session_token => "session_token",
         :access_key_id => "access_key_id",
         :secret_access_key => "secret_access_key"
       )
+    }
 
+    let(:connection) {
+      Jedlik::Connection.new("key_id", "secret")
+    }
+
+    before do
+      Time.stub!(:now).and_return(Time.at(1332635893)) # Sat Mar 24 20:38:13 -0400 2012
+
+      Jedlik::SecurityTokenService.stub!(:new).and_return(mock_service)
+    end
+
+    it "signs and posts a request" do
       stub_request(:post, "https://dynamodb.us-east-1.amazonaws.com/").
         with(
           :body     => "{}",
@@ -27,15 +35,27 @@ describe Jedlik::Connection do
           }
         ).
         to_return(
-          :status => 200,
-          :body => '{"TableNames":["example"]}',
+          :status  => 200,
+          :body    => '{"TableNames":["example"]}',
           :headers => {}
         )
 
-      Jedlik::SecurityTokenService.stub!(:new).and_return(mock_service)
-      connection = Jedlik::Connection.new("key_id", "secret")
       result = connection.post :ListTables
       result.should == {"TableNames" => ["example"]}
+    end
+
+    it "converts a hash to JSON" do
+      stub_request(:post, "https://dynamodb.us-east-1.amazonaws.com/").
+        with(:body => %({"foo":"bar"}))
+
+      connection.post :Query, {:foo => "bar"}
+    end
+
+    it "sends a string as it is" do
+      stub_request(:post, "https://dynamodb.us-east-1.amazonaws.com/").
+        with(:body => %(hello world))
+
+      connection.post :Query, "hello world"
     end
   end
 end

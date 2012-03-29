@@ -31,7 +31,14 @@ module Jedlik
     # http://docs.amazonwebservices.com/amazondynamodb/latest/developerguide
     #
     def post operation, data={}
-      request = new_request operation, Yajl::Encoder.encode(data)
+      body = case data
+      when String
+        body = data
+      else
+        Yajl::Encoder.encode(data)
+      end
+
+      request = new_request operation, body
       request.sign sts
       hydra.queue request
       hydra.run
