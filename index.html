@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>Jedlik</title>
+
+  <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+
+  <div class="title">
+    <h1>Jedlik</h1>
+  </div>
+
+  <div class="content">
+    <p style="text-align: center; margin-top: 0;">
+      <a href="http://github.com/hashmal/jedlik">Source Code</a>
+      <a href="http://github.com/hashmal/jedlik/issues">Support</a>
+      <a href="http://www.bravebolt.com">Author</a>
+    </p>
+
+    <p>
+      Communicate with <strong>Amazon DynamoDB</strong> in Ruby.
+      Raw access to the full API without having to handle
+      temporary credentials or HTTP requests by yourself.
+    </p>
+  </div>
+
+  <div class="title">
+    <h2>Usage</h2>
+  </div>
+
+  <div class="content">
+    <p>
+      Install as a gem using <code>gem install "jedlik"</code> or in your
+      gemfile using <code>gem "jedlik"</code>. Jedlik has only one dependency:
+      <a href="http://github.com/typhoeus/typhoeus">Typhoeus.</a>
+    </p>
+
+    <p>
+      Jedlik maps the DynamoDB API closely. Once the connection object
+      is ready, all requests are done through <code>#post</code>.
+      The first argument is the name of the operation, the second is a hash
+      that will be converted to JSON and used as the request body.
+    </p>
+
+<pre>
+require 'jedlik'
+
+conn = Jedlik::Connection.new 'DG7I54_KEY_ID', 'wr31PP+hu5d76+SECRET_KEY'
+
+conn.post :ListTables    # => {"TableNames"=>["table1", "table2"]}
+
+conn.post :GetItem, {:TableName => "table1", :Key => {:S => "foo"}}
+# => Hash
+</pre>
+
+    <p>
+      It is also possible to pass a string that will be used directly for
+      the request body:
+    </p>
+
+<pre>
+conn.post :GetItem, '{"TableName": "table1", "Key": {"S": "foo"}}'
+# => Hash
+</pre>
+  </div>
+
+  <div class="title">
+    <h2>Rationale</h2>
+  </div>
+
+  <div class="content">
+    <p>
+      The <strong>AWS gem</strong> is quite heavy and does not map the
+      DynamoDB API closely enough. Other tools, like
+      <a href="http://github.com/Veraticus/Dynamoid">Dynamoid,</a> are
+      interesting but try too hard to provide RDBMS-like features to my taste.
+    </p>
+
+    <p>
+      I did not want to learn a new API after spending hours reading
+      DynamoDB's documentation. However, dealing auth AWS authentication
+      mechanism manually is daunting and error prone. Jedlik addresses both
+      problems by providing a 1:1 mapping to the API while taking care of
+      signing requests.
+    </p>
+  </div>
+
+  <div class="title">
+    <h2>License</h2>
+  </div>
+
+  <div class="content" style="font-size: 0.8em;">
+    <p>Copyright (C) 2012, Jeremy (Hashmal) Pinat</p>
+
+    <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+
+    <p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+
+    <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+  </div>
+
+</body>
+</html>
