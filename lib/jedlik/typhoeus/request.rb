@@ -15,7 +15,7 @@ module Typhoeus
     end
 
     def string_to_sign
-      "POST\n/\n\nhost:#{@parsed_uri.host}\n#{amz_to_sts}\n#{body}"
+      "POST\n/\n\nhost:#{headers["host"]}\n#{amz_to_sts}\n#{@options[:body]}"
     end
 
     def amz_to_sts
@@ -24,6 +24,10 @@ module Typhoeus
 
     def get_amz_headers
       headers.select {|key, val| key =~ /\Ax-amz-/}
+    end
+
+    def headers
+      @options[:headers]
     end
   end
 end

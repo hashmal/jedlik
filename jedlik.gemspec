@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name         = 'jedlik'
-  s.version      = '0.1.0'
+  s.version      = '0.1.1'
   s.summary      = "Communicate with Amazon DynamoDB."
   s.description  = "Communicate with Amazon DynamoDB. Raw access to the full API without having to handle temporary credentials or HTTP requests by yourself."
   s.authors      = ["Hashmal", "Brandon Keene"]
@@ -16,6 +16,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'typhoeus'
   s.add_runtime_dependency 'yajl-ruby'
 
+  s.add_development_dependency 'rake'
+  s.add_development_dependency 'pry'
   s.add_development_dependency 'rspec', '2.8.0'
   s.add_development_dependency 'webmock'
 end

@@ -1,5 +1,6 @@
 # Copyright (c) 2012, Jeremy (Hashmal) Pinat.
 
+require 'pry'
 require 'rspec'
 require 'webmock/rspec'
 
